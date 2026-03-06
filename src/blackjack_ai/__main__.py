@@ -14,6 +14,8 @@ from blackjack_ai.tablegen import (
     write_csv,
     write_html,
     write_png,
+    write_evs_csv,
+    write_flips_csv,
 )
 
 
@@ -52,14 +54,13 @@ def cmd_query(args: argparse.Namespace) -> int:
 
 
 def cmd_table(args: argparse.Namespace) -> int:
-    rules = build_rules(args)
-
+    base_rules = build_rules(args)
     out_dir = Path(args.out)
     out_dir.mkdir(parents=True, exist_ok=True)
 
-    hard = generate_hard_totals(rules)
-    soft = generate_soft_totals(rules)
-    pairs = generate_pairs(rules)
+    hard, hard_evs = generate_hard_totals(base_rules, explain=args.explain or (args.compare is not None))
+    soft, soft_evs = generate_soft_totals(base_rules, explain=args.explain or (args.compare is not None))
+    pairs, pairs_evs = generate_pairs(base_rules, explain=args.explain or (args.compare is not None))
 
     if args.csv:
         write_csv(hard, out_dir / "hard_totals.csv")
@@ -73,6 +74,39 @@ def cmd_table(args: argparse.Namespace) -> int:
         write_png(hard, out_dir / "hard_totals.png")
         write_png(soft, out_dir / "soft_totals.png")
         write_png(pairs, out_dir / "pairs.png")
+
+    # EV breakdown outputs
+    if args.explain:
+        assert hard_evs is not None and soft_evs is not None and pairs_evs is not None
+        write_evs_csv(hard, hard_evs, out_dir / "hard_totals_evs.csv")
+        write_evs_csv(soft, soft_evs, out_dir / "soft_totals_evs.csv")
+        write_evs_csv(pairs, pairs_evs, out_dir / "pairs_evs.csv")
+
+    # Flip report (base vs variant rules)
+    if args.compare is not None:
+        # Build a variant ruleset by toggling selected fields.
+        var_rules = base_rules
+        if args.compare in ("h17", "h17+surrender"):
+            var_rules = Rules(**{**var_rules.__dict__, "dealer_hits_soft_17": True})
+        if args.compare in ("surrender", "h17+surrender"):
+            var_rules = Rules(**{**var_rules.__dict__, "allow_surrender": True})
+
+        v_hard, v_hard_evs = generate_hard_totals(var_rules, explain=True)
+        v_soft, v_soft_evs = generate_soft_totals(var_rules, explain=True)
+        v_pairs, v_pairs_evs = generate_pairs(var_rules, explain=True)
+
+        assert hard_evs is not None and soft_evs is not None and pairs_evs is not None
+        assert v_hard_evs is not None and v_soft_evs is not None and v_pairs_evs is not None
+
+        flips_path = out_dir / "flips.csv"
+        # Append all flips into one file
+        # (write header once, so we’ll write to a temp list then write)
+        # Simpler: write three separate and let user merge. But per request: one report.
+        # We'll write one consolidated file by writing sequentially with the same writer format.
+        # Implement by writing three files instead (clean + simple).
+        write_flips_csv("Hard Totals", hard.row_labels, hard.col_labels, hard_evs, v_hard_evs, out_dir / "flips_hard.csv")
+        write_flips_csv("Soft Totals", soft.row_labels, soft.col_labels, soft_evs, v_soft_evs, out_dir / "flips_soft.csv")
+        write_flips_csv("Pairs", pairs.row_labels, pairs.col_labels, pairs_evs, v_pairs_evs, out_dir / "flips_pairs.csv")
 
     print(f"Wrote outputs to: {out_dir.resolve()}")
     return 0
@@ -109,6 +143,13 @@ def main() -> int:
     t.add_argument("--no-das", action="store_true")
     t.add_argument("--hit-split-aces", action="store_true")
     t.add_argument("--resplit-aces", action="store_true")
+    t.add_argument("--explain", action="store_true", help="Write EV breakdown CSVs for every cell.")
+    t.add_argument(
+        "--compare",
+        choices=["h17", "surrender", "h17+surrender"],
+        default=None,
+        help="Write flip reports comparing base rules vs a variant toggle.",
+    )
     t.set_defaults(fn=cmd_table)
 
     args = p.parse_args()
