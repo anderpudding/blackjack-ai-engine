@@ -19,3 +19,10 @@ class Rules:
     max_splits: int = 1              # 1 => split once into 2 hands (no resplitting)
     double_after_split: bool = True  # DAS
     hit_split_aces: bool = False     # False => split Aces get one card then stand
+
+    # Splitting
+    allow_split: bool = True
+    max_splits: int = 1
+    double_after_split: bool = True
+    hit_split_aces: bool = False
+    resplit_aces: bool = False   # NEW: allow re-splitting A,A when max_splits > 1
