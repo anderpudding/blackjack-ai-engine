@@ -3,9 +3,7 @@ from __future__ import annotations
 from functools import lru_cache
 from typing import Dict, Tuple
 
-from blackjack_ai import rules
 from blackjack_ai.cards import InfiniteDeck, Rank
-from blackjack_ai.deck_factory import make_deck
 from blackjack_ai.hand import add_card
 from blackjack_ai.rules import Rules
 
@@ -27,13 +25,11 @@ def _should_dealer_hit(total: int, soft: bool, rules: Rules) -> bool:
 @lru_cache(maxsize=None)
 def _dealer_play_from_state(total: int, soft: bool, dealer_hits_soft_17: bool) -> Tuple[Tuple[str, float], ...]:
     """
-    Returns a normalized distribution of dealer outcomes given current dealer (total, soft).
-    Uses infinite-deck draws.
+    Dealer recursion under infinite-deck model (replacement draws).
     Cached via primitive args only.
     """
     rules = Rules(dealer_hits_soft_17=dealer_hits_soft_17)
-    from blackjack_ai.deck_factory import make_deck
-    deck = make_deck(rules)
+    deck = InfiniteDeck()
 
     if total > 21:
         return (("bust", 1.0),)
@@ -41,7 +37,6 @@ def _dealer_play_from_state(total: int, soft: bool, dealer_hits_soft_17: bool) -
     if not _should_dealer_hit(total, soft, rules):
         if 17 <= total <= 21:
             return ((str(total), 1.0),)
-        # Defensive; dealer should not stop outside 17..21 unless bust.
         return (("bust", 1.0),)
 
     accum: Dict[str, float] = {"bust": 0.0, "17": 0.0, "18": 0.0, "19": 0.0, "20": 0.0, "21": 0.0}
@@ -51,7 +46,6 @@ def _dealer_play_from_state(total: int, soft: bool, dealer_hits_soft_17: bool) -
         for k, prob in sub:
             accum[k] += p * prob
 
-    # Return as tuple for caching friendliness.
     return tuple((k, accum[k]) for k in ["bust", "17", "18", "19", "20", "21"] if accum[k] > 0.0)
 
 
@@ -59,13 +53,11 @@ def _dealer_play_from_state(total: int, soft: bool, dealer_hits_soft_17: bool) -
 def dealer_outcome_distribution(upcard: Rank, dealer_hits_soft_17: bool) -> Dict[str, float]:
     """
     Dealer starts with upcard and draws a hidden card, then plays to completion.
-    Returns distribution over: "17","18","19","20","21","bust".
+    Infinite-deck (replacement draws) model.
     """
-    from blackjack_ai.deck_factory import make_deck
-    deck = make_deck(rules)
+    deck = InfiniteDeck()
     accum: Dict[str, float] = {"bust": 0.0, "17": 0.0, "18": 0.0, "19": 0.0, "20": 0.0, "21": 0.0}
 
-    # Hidden card draw
     for rank, p in deck.outcomes():
         total, soft = add_card(0, False, upcard)
         total, soft = add_card(total, soft, rank)
