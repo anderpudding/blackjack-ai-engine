@@ -1,15 +1,27 @@
-__pycache__/
-*.pyc
-*.pyo
-*.pyd
+[project]
+name = "blackjack-ai-engine"
+version = "0.1.0"
+description = "Expected-value blackjack strategy engine"
+authors = [{name = "Sungjun Lee"}]
+readme = "README.md"
+requires-python = ">=3.10"
 
-.env
-venv/
-.venv/
+dependencies = [
+    "numpy",
+]
 
-dist/
-build/
+[project.optional-dependencies]
+dev = [
+    "pytest",
+    "black",
+    "ruff"
+]
 
-.ipynb_checkpoints
+[tool.pytest.ini_options]
+testpaths = ["tests"]
 
-.DS_Store
+[tool.black]
+line-length = 88
+
+[tool.ruff]
+line-length = 88
