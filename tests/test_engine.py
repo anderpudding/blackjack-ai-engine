@@ -1,8 +1,7 @@
-from blackjack_ai.rules import Rules
-from blackjack_ai.strategy import recommend_action
+from blackjack_ai.cards import parse_rank
 from blackjack_ai.ev_engine import PlayerState, compute_action_evs
 from blackjack_ai.rules import Rules
-from blackjack_ai.cards import parse_rank
+from blackjack_ai.strategy import recommend_action
 
 
 def test_directional_basic_strategy_checks():
@@ -24,6 +23,7 @@ def test_split_action_available_for_pairs():
         max_splits=1,
         double_after_split=True,
         hit_split_aces=False,
+        resplit_aces=False,
     )
     rec = recommend_action(["8", "8"], "6", rules)
     assert "split" in rec.evs
@@ -34,17 +34,18 @@ def test_split_disabled_when_not_pair():
     rec = recommend_action(["8", "7"], "6", rules)
     assert "split" not in rec.evs
 
+
 def test_resplit_available_when_under_max_splits():
     rules = Rules(
         allow_split=True,
-        max_splits=2,              # allow resplit
+        max_splits=2,
         double_after_split=True,
         hit_split_aces=False,
         resplit_aces=False,
     )
     dealer_up = parse_rank("6")
 
-    # Represents a hand that is currently a pair of 8s (post-split), with 1 split already used.
+    # Post-split pair state (e.g., 8,8 after a split hand draws an 8)
     state = PlayerState(
         total=16,
         soft=False,
