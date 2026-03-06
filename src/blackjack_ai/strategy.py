@@ -20,7 +20,12 @@ def recommend_action(player_cards: List[str], dealer_upcard: str, rules: Rules) 
     dealer_rank: Rank = parse_rank(dealer_upcard)
 
     hand = hand_from_cards(player_ranks)
-    state = PlayerState(total=hand.total, soft=hand.soft, can_double=True)
+    state = PlayerState(
+        total=hand.total,
+        soft=hand.soft,
+        can_double=True,
+        can_surrender=True,
+    )
 
     evs = compute_action_evs(state, dealer_rank, rules)
     best_action = max(evs, key=lambda a: evs[a])
