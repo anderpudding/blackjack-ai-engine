@@ -21,7 +21,7 @@ def recommend_action(player_cards: List[str], dealer_upcard: str, rules: Rules) 
 
     hand = hand_from_cards(player_ranks)
 
-    # Pair detection (only for exactly 2-card initial hand)
+    # Pair detection only for an initial 2-card hand
     pair_rank = 0
     can_split = False
     if len(player_ranks) == 2 and player_ranks[0] == player_ranks[1]:
