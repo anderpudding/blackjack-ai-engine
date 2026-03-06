@@ -40,10 +40,9 @@ def main() -> int:
             allow_double=(not args.no_double),
             allow_surrender=bool(args.surrender),
             allow_split=(not args.no_split),
-            max_splits=1,
+            max_splits=args.max_splits,
             double_after_split=(not args.no_das),
             hit_split_aces=bool(args.hit_split_aces),
-            max_splits=args.max_splits,
             resplit_aces=bool(args.resplit_aces),
         )
         rec = recommend_action(player_cards, dealer_up, rules)
