@@ -20,13 +20,16 @@ def parse_query(query: str) -> Tuple[List[str], str]:
 
 
 def main() -> int:
-    parser = argparse.ArgumentParser(prog="blackjack_ai")
-    parser.add_argument("query", help="Example: 'A,7 vs 9'")
-    parser.add_argument("--h17", action="store_true", help="Dealer hits soft 17 (H17). Default is S17.")
-    parser.add_argument("--surrender", action="store_true", help="Enable late surrender (first decision only).")
-    parser.add_argument("--no-double", action="store_true", help="Disable doubling.")
+    p = argparse.ArgumentParser(prog="blackjack_ai")
+    p.add_argument("query", help="Example: '8,8 vs 6'")
+    p.add_argument("--h17", action="store_true", help="Dealer hits soft 17 (H17). Default S17.")
+    p.add_argument("--surrender", action="store_true", help="Enable late surrender (first decision only).")
+    p.add_argument("--no-double", action="store_true", help="Disable doubling.")
+    p.add_argument("--no-split", action="store_true", help="Disable splitting.")
+    p.add_argument("--no-das", action="store_true", help="Disable double after split (DAS).")
+    p.add_argument("--hit-split-aces", action="store_true", help="Allow hitting after splitting Aces.")
 
-    args = parser.parse_args()
+    args = p.parse_args()
 
     try:
         player_cards, dealer_up = parse_query(args.query)
@@ -34,6 +37,10 @@ def main() -> int:
             dealer_hits_soft_17=bool(args.h17),
             allow_double=(not args.no_double),
             allow_surrender=bool(args.surrender),
+            allow_split=(not args.no_split),
+            max_splits=1,
+            double_after_split=(not args.no_das),
+            hit_split_aces=bool(args.hit_split_aces),
         )
         rec = recommend_action(player_cards, dealer_up, rules)
         print(f"{player_cards} vs {dealer_up} -> {rec.action}")
