@@ -55,6 +55,7 @@ def _ev_opt(
     max_splits: int,
     double_after_split: bool,
     hit_split_aces: bool,
+    resplit_aces: bool,
 ) -> float:
     rules = Rules(
         dealer_hits_soft_17=dealer_hits_soft_17,
@@ -64,6 +65,7 @@ def _ev_opt(
         max_splits=max_splits,
         double_after_split=double_after_split,
         hit_split_aces=hit_split_aces,
+        resplit_aces=resplit_aces,
     )
     state = PlayerState(
         total=total,
@@ -99,6 +101,7 @@ def _opt_from_state(state: PlayerState, dealer_upcard: Rank, rules: Rules) -> fl
         rules.max_splits,
         rules.double_after_split,
         rules.hit_split_aces,
+        rules.resplit_aces,
     )
 
 
