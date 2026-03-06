@@ -20,11 +20,22 @@ def recommend_action(player_cards: List[str], dealer_upcard: str, rules: Rules) 
     dealer_rank: Rank = parse_rank(dealer_upcard)
 
     hand = hand_from_cards(player_ranks)
+
+    # Pair detection (only for exactly 2-card initial hand)
+    pair_rank = 0
+    can_split = False
+    if len(player_ranks) == 2 and player_ranks[0] == player_ranks[1]:
+        pair_rank = int(player_ranks[0])
+        can_split = True
+
     state = PlayerState(
         total=hand.total,
         soft=hand.soft,
         can_double=True,
         can_surrender=True,
+        can_split=can_split,
+        pair_rank=pair_rank,
+        splits_used=0,
     )
 
     evs = compute_action_evs(state, dealer_rank, rules)
