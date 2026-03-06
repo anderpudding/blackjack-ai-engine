@@ -2,7 +2,7 @@
 name = "blackjack-ai-engine"
 version = "0.1.0"
 description = "Expected-value blackjack strategy engine"
-authors = [{name = "Sungjun Lee"}]
+authors = [{ name = "Sungjun Lee" }]
 readme = "README.md"
 requires-python = ">=3.10"
 
@@ -14,7 +14,7 @@ dependencies = [
 dev = [
     "pytest",
     "black",
-    "ruff"
+    "ruff",
 ]
 
 [tool.pytest.ini_options]
@@ -25,3 +25,4 @@ line-length = 88
 
 [tool.ruff]
 line-length = 88
+select = ["E", "F", "I", "UP", "B"]
