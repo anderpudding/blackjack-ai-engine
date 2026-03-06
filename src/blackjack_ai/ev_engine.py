@@ -16,6 +16,9 @@ class PlayerState:
     soft: bool
     can_double: bool
     can_surrender: bool
+    can_split: bool
+    pair_rank: int          # 0 means "not a pair"; otherwise 2..11 (Ace=11)
+    splits_used: int        # number of splits already performed in this branch
 
 
 def ev_stand(player_total: int, dealer_upcard: Rank, rules: Rules) -> float:
@@ -41,21 +44,35 @@ def _ev_opt(
     soft: bool,
     can_double: bool,
     can_surrender: bool,
+    can_split: bool,
+    pair_rank: int,
+    splits_used: int,
     dealer_upcard: Rank,
     dealer_hits_soft_17: bool,
     allow_double: bool,
     allow_surrender: bool,
+    allow_split: bool,
+    max_splits: int,
+    double_after_split: bool,
+    hit_split_aces: bool,
 ) -> float:
     rules = Rules(
         dealer_hits_soft_17=dealer_hits_soft_17,
         allow_double=allow_double,
         allow_surrender=allow_surrender,
+        allow_split=allow_split,
+        max_splits=max_splits,
+        double_after_split=double_after_split,
+        hit_split_aces=hit_split_aces,
     )
     state = PlayerState(
         total=total,
         soft=soft,
         can_double=can_double,
         can_surrender=can_surrender,
+        can_split=can_split,
+        pair_rank=pair_rank,
+        splits_used=splits_used,
     )
 
     if state.total > 21:
@@ -65,10 +82,34 @@ def _ev_opt(
     return max(evs.values())
 
 
+def _opt_from_state(state: PlayerState, dealer_upcard: Rank, rules: Rules) -> float:
+    return _ev_opt(
+        state.total,
+        state.soft,
+        state.can_double,
+        state.can_surrender,
+        state.can_split,
+        state.pair_rank,
+        state.splits_used,
+        dealer_upcard,
+        rules.dealer_hits_soft_17,
+        rules.allow_double,
+        rules.allow_surrender,
+        rules.allow_split,
+        rules.max_splits,
+        rules.double_after_split,
+        rules.hit_split_aces,
+    )
+
+
 def compute_action_evs(state: PlayerState, dealer_upcard: Rank, rules: Rules) -> Dict[str, float]:
     """
     Returns EVs for all legal actions from this state.
-    v1 actions: stand, hit, double, surrender (optional)
+    Actions: stand, hit, double, surrender (optional), split (optional).
+    EV units:
+      - stand/hit are per 1 unit bet
+      - double returns outcomes in +/-2 units (since 2 units wagered)
+      - split returns outcomes in +/-2 units (since 2 units wagered after split)
     """
     deck = InfiniteDeck()
     evs: Dict[str, float] = {}
@@ -76,26 +117,26 @@ def compute_action_evs(state: PlayerState, dealer_upcard: Rank, rules: Rules) ->
     # Stand
     evs["stand"] = ev_stand(state.total, dealer_upcard, rules)
 
-    # Hit (after hitting, surrender/double are no longer allowed)
+    # Hit: after hit, no surrender/double/split for that hand
     hit_ev = 0.0
     for rank, p in deck.outcomes():
         nt, ns = add_card(state.total, state.soft, rank)
         if nt > 21:
             hit_ev += p * (-1.0)
         else:
-            hit_ev += p * _ev_opt(
-                nt,
-                ns,
-                False,   # can_double
-                False,   # can_surrender
-                dealer_upcard,
-                rules.dealer_hits_soft_17,
-                rules.allow_double,
-                rules.allow_surrender,
+            next_state = PlayerState(
+                total=nt,
+                soft=ns,
+                can_double=False,
+                can_surrender=False,
+                can_split=False,
+                pair_rank=0,
+                splits_used=state.splits_used,
             )
+            hit_ev += p * _opt_from_state(next_state, dealer_upcard, rules)
     evs["hit"] = hit_ev
 
-    # Double (one card then stand; 2x payoff)
+    # Double: one card then forced stand (2x payoff)
     if rules.allow_double and state.can_double:
         dbl_ev = 0.0
         for rank, p in deck.outcomes():
@@ -106,21 +147,58 @@ def compute_action_evs(state: PlayerState, dealer_upcard: Rank, rules: Rules) ->
                 dbl_ev += p * (2.0 * ev_stand(nt, dealer_upcard, rules))
         evs["double"] = dbl_ev
 
-    # Surrender (late surrender, first decision only; EV = -0.5)
+    # Surrender: first decision only (EV = -0.5)
     if rules.allow_surrender and state.can_surrender:
         evs["surrender"] = -0.5
+
+    # Split: only if this hand is a pair and splitting is allowed
+    if (
+        rules.allow_split
+        and state.can_split
+        and state.pair_rank in (2, 3, 4, 5, 6, 7, 8, 9, 10, 11)
+        and state.splits_used < rules.max_splits
+    ):
+        pr = state.pair_rank
+
+        # Each split hand starts with one card of the pair, then draws one new card.
+        # Total EV is sum of both hands (two 1-unit bets), hence range about [-2, +2].
+        def ev_one_split_hand() -> float:
+            hand_ev = 0.0
+            for rank, p in deck.outcomes():
+                # Start from single pr card
+                t, s = add_card(0, False, pr)
+                t, s = add_card(t, s, rank)
+
+                # Split Aces rule: if not allowed to hit split aces, force stand immediately
+                if pr == 11 and not rules.hit_split_aces:
+                    if t > 21:
+                        hand_ev += p * (-1.0)
+                    else:
+                        hand_ev += p * ev_stand(t, dealer_upcard, rules)
+                    continue
+
+                if t > 21:
+                    hand_ev += p * (-1.0)
+                    continue
+
+                next_state = PlayerState(
+                    total=t,
+                    soft=s,
+                    can_double=rules.double_after_split,
+                    can_surrender=False,
+                    can_split=False,  # v1: no resplitting
+                    pair_rank=0,
+                    splits_used=state.splits_used + 1,
+                )
+                hand_ev += p * _opt_from_state(next_state, dealer_upcard, rules)
+            return hand_ev
+
+        # Two independent hands with identical distribution in infinite-deck model
+        one_hand = ev_one_split_hand()
+        evs["split"] = one_hand + one_hand
 
     return evs
 
 
 def optimal_ev(state: PlayerState, dealer_upcard: Rank, rules: Rules) -> float:
-    return _ev_opt(
-        state.total,
-        state.soft,
-        state.can_double,
-        state.can_surrender,
-        dealer_upcard,
-        rules.dealer_hits_soft_17,
-        rules.allow_double,
-        rules.allow_surrender,
-    )
+    return _opt_from_state(state, dealer_upcard, rules)
