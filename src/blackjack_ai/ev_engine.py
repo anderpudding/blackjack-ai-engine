@@ -184,13 +184,23 @@ def compute_action_evs(state: PlayerState, dealer_upcard: Rank, rules: Rules) ->
                     hand_ev += p * (-1.0)
                     continue
 
+                # Determine if this newly formed 2-card hand can be resplit:
+                # - only if the drawn card matches the pair card (rank == pr)
+                # - only if we still have split budget remaining AFTER this split (splits_used+1 < max_splits)
+                # - optionally block resplitting Aces unless rules.resplit_aces is True
+                can_resplit = (
+                    (rank == pr)
+                    and ((state.splits_used + 1) < rules.max_splits)
+                    and (pr != 11 or rules.resplit_aces)
+                )
+
                 next_state = PlayerState(
                     total=t,
                     soft=s,
                     can_double=rules.double_after_split,
                     can_surrender=False,
-                    can_split=False,  # v1: no resplitting
-                    pair_rank=0,
+                    can_split=can_resplit,
+                    pair_rank=(pr if can_resplit else 0),
                     splits_used=state.splits_used + 1,
                 )
                 hand_ev += p * _opt_from_state(next_state, dealer_upcard, rules)
