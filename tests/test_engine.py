@@ -58,3 +58,9 @@ def test_resplit_available_when_under_max_splits():
 
     evs = compute_action_evs(state, dealer_up, rules)
     assert "split" in evs
+
+def test_finite_shoe_deck_creation():
+    from blackjack_ai.shoe import FiniteShoe
+
+    shoe = FiniteShoe.standard(6)
+    assert shoe.total_cards() == 312
