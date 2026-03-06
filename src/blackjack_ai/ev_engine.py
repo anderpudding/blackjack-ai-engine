@@ -9,6 +9,10 @@ from blackjack_ai.dealer import dealer_outcome_distribution
 from blackjack_ai.hand import add_card
 from blackjack_ai.rules import Rules
 
+from blackjack_ai.ev_engine import PlayerState, compute_action_evs
+from blackjack_ai.rules import Rules
+from blackjack_ai.cards import parse_rank
+
 
 @dataclass(frozen=True)
 class PlayerState:
@@ -211,6 +215,30 @@ def compute_action_evs(state: PlayerState, dealer_upcard: Rank, rules: Rules) ->
         evs["split"] = one_hand + one_hand
 
     return evs
+
+def test_resplit_available_when_under_max_splits():
+    rules = Rules(
+        allow_split=True,
+        max_splits=2,
+        double_after_split=True,
+        hit_split_aces=False,
+        resplit_aces=False,
+    )
+    dealer_up = parse_rank("6")
+
+    # Represents a post-split pair of 8s with 1 split already used.
+    state = PlayerState(
+        total=16,
+        soft=False,
+        can_double=True,
+        can_surrender=False,
+        can_split=True,
+        pair_rank=8,
+        splits_used=1,
+    )
+
+    evs = compute_action_evs(state, dealer_up, rules)
+    assert "split" in evs
 
 
 def optimal_ev(state: PlayerState, dealer_upcard: Rank, rules: Rules) -> float:
