@@ -20,3 +20,7 @@ class Rules:
     double_after_split: bool = True  # DAS
     hit_split_aces: bool = False     # False => split Aces get one card then stand
     resplit_aces: bool = False       # allow resplitting A,A when max_splits > 1
+
+    # Deck configuration
+    decks: int = 6
+    finite_shoe: bool = False
