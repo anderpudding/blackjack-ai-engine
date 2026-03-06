@@ -24,3 +24,12 @@ pip install -r requirements.txt
 
 pytest -q
 python examples/demo.py
+```
+
+## Generate strategy tables
+
+CSV + HTML (recommended):
+
+```bash
+python -m blackjack_ai table --csv --html --out outputs/strategy
+```
