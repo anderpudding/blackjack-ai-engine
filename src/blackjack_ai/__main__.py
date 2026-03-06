@@ -30,6 +30,8 @@ def main() -> int:
     p.add_argument("--hit-split-aces", action="store_true", help="Allow hitting after splitting Aces.")
     p.add_argument("--max-splits", type=int, default=1, help="Maximum number of splits allowed.")
     p.add_argument("--resplit-aces", action="store_true", help="Allow resplitting Aces (if max_splits > 1).")
+    p.add_argument("--decks", type=int, default=6)
+    p.add_argument("--finite-shoe", action="store_true")
 
     args = p.parse_args()
 
@@ -44,6 +46,8 @@ def main() -> int:
             double_after_split=(not args.no_das),
             hit_split_aces=bool(args.hit_split_aces),
             resplit_aces=bool(args.resplit_aces),
+            decks=args.decks,
+            finite_shoe=args.finite_shoe,
         )
         rec = recommend_action(player_cards, dealer_up, rules)
         print(f"{player_cards} vs {dealer_up} -> {rec.action}")
