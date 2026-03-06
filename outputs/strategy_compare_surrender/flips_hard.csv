@@ -1,0 +1,11 @@
+table,row,dealer,base_best,var_best,base_ev_hit,base_ev_stand,base_ev_double,base_ev_split,base_ev_surrender,var_ev_hit,var_ev_stand,var_ev_double,var_ev_split,var_ev_surrender
+Hard Totals,12,A,hit,surrender,-0.518539,-0.769427,-1.142209,,,-0.518539,-0.769427,-1.142209,,-0.500000
+Hard Totals,13,A,hit,surrender,-0.552929,-0.769427,-1.177681,,,-0.552929,-0.769427,-1.177681,,-0.500000
+Hard Totals,14,10,hit,surrender,-0.500498,-0.575782,-1.008086,,,-0.500498,-0.575782,-1.008086,,-0.500000
+Hard Totals,14,A,hit,surrender,-0.584862,-0.769427,-1.213154,,,-0.584862,-0.769427,-1.213154,,-0.500000
+Hard Totals,15,10,hit,surrender,-0.536177,-0.575782,-1.073350,,,-0.536177,-0.575782,-1.073350,,-0.500000
+Hard Totals,15,A,hit,surrender,-0.614515,-0.769427,-1.248627,,,-0.614515,-0.769427,-1.248627,,-0.500000
+Hard Totals,16,9,hit,surrender,-0.509322,-0.543150,-1.018644,,,-0.509322,-0.543150,-1.018644,,-0.500000
+Hard Totals,16,10,hit,surrender,-0.569307,-0.575782,-1.138614,,,-0.569307,-0.575782,-1.138614,,-0.500000
+Hard Totals,16,A,hit,surrender,-0.642050,-0.769427,-1.284099,,,-0.642050,-0.769427,-1.284099,,-0.500000
+Hard Totals,17,A,stand,surrender,-0.669847,-0.638639,-1.339693,,,-0.669847,-0.638639,-1.339693,,-0.500000

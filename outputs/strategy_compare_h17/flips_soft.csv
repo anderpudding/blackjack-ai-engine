@@ -1,0 +1,4 @@
+table,row,dealer,base_best,var_best,base_ev_hit,base_ev_stand,base_ev_double,base_ev_split,base_ev_surrender,var_ev_hit,var_ev_stand,var_ev_double,var_ev_split,var_ev_surrender
+Soft Totals,"A,4",4,hit,double,0.059285,-0.211063,0.058427,,,0.060478,-0.205850,0.061031,,
+Soft Totals,"A,7",2,stand,double,0.062905,0.121742,0.119750,,,0.059868,0.110270,0.114692,,
+Soft Totals,"A,8",6,stand,double,0.239799,0.495977,0.479599,,,0.230529,0.453122,0.461058,,
