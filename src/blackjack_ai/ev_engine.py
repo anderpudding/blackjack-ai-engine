@@ -4,8 +4,10 @@ from dataclasses import dataclass
 from functools import lru_cache
 from typing import Dict
 
+from blackjack_ai import rules
 from blackjack_ai.cards import InfiniteDeck, Rank
 from blackjack_ai.dealer import dealer_outcome_distribution
+from blackjack_ai.deck_factory import make_deck
 from blackjack_ai.hand import add_card
 from blackjack_ai.rules import Rules
 
@@ -114,7 +116,8 @@ def compute_action_evs(state: PlayerState, dealer_upcard: Rank, rules: Rules) ->
       - double returns outcomes in +/-2 units (since 2 units wagered)
       - split returns outcomes in +/-2 units (since 2 units wagered after split)
     """
-    deck = InfiniteDeck()
+    from blackjack_ai.deck_factory import make_deck
+    deck = make_deck(rules)
     evs: Dict[str, float] = {}
 
     # Stand

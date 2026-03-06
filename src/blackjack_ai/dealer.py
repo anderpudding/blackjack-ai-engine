@@ -3,7 +3,9 @@ from __future__ import annotations
 from functools import lru_cache
 from typing import Dict, Tuple
 
+from blackjack_ai import rules
 from blackjack_ai.cards import InfiniteDeck, Rank
+from blackjack_ai.deck_factory import make_deck
 from blackjack_ai.hand import add_card
 from blackjack_ai.rules import Rules
 
@@ -30,7 +32,8 @@ def _dealer_play_from_state(total: int, soft: bool, dealer_hits_soft_17: bool) -
     Cached via primitive args only.
     """
     rules = Rules(dealer_hits_soft_17=dealer_hits_soft_17)
-    deck = InfiniteDeck()
+    from blackjack_ai.deck_factory import make_deck
+    deck = make_deck(rules)
 
     if total > 21:
         return (("bust", 1.0),)
@@ -58,7 +61,8 @@ def dealer_outcome_distribution(upcard: Rank, dealer_hits_soft_17: bool) -> Dict
     Dealer starts with upcard and draws a hidden card, then plays to completion.
     Returns distribution over: "17","18","19","20","21","bust".
     """
-    deck = InfiniteDeck()
+    from blackjack_ai.deck_factory import make_deck
+    deck = make_deck(rules)
     accum: Dict[str, float] = {"bust": 0.0, "17": 0.0, "18": 0.0, "19": 0.0, "20": 0.0, "21": 0.0}
 
     # Hidden card draw
