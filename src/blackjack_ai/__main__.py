@@ -110,6 +110,33 @@ def cmd_table(args: argparse.Namespace) -> int:
         write_flips_csv("Soft Totals", soft.row_labels, soft.col_labels, soft_evs, v_soft_evs, out_dir / "flips_soft.csv")
         write_flips_csv("Pairs", pairs.row_labels, pairs.col_labels, pairs_evs, v_pairs_evs, out_dir / "flips_pairs.csv")
 
+        label = comparison_label(args.compare)
+
+        write_diff_png(
+            f"Hard Totals ({label})",
+            hard.row_labels,
+            hard.col_labels,
+            hard_evs,
+            v_hard_evs,
+            out_dir / "diff_hard.png",
+        )
+        write_diff_png(
+            f"Soft Totals ({label})",
+            soft.row_labels,
+            soft.col_labels,
+            soft_evs,
+            v_soft_evs,
+            out_dir / "diff_soft.png",
+        )
+        write_diff_png(
+            f"Pairs ({label})",
+            pairs.row_labels,
+            pairs.col_labels,
+            pairs_evs,
+            v_pairs_evs,
+            out_dir / "diff_pairs.png",
+        )
+
     print(f"Wrote outputs to: {out_dir.resolve()}")
     return 0
 
