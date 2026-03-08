@@ -146,7 +146,7 @@ Key modules:
 # Installation
 
 ```bash
-git clone https://github.com/YOUR_USERNAME/blackjack-ai-engine
+git clone https://github.com/anderpudding/blackjack-ai-engine.git
 cd blackjack-ai-engine
 
 python -m venv venv
