@@ -8,14 +8,16 @@ from typing import List, Tuple
 from blackjack_ai.rules import Rules
 from blackjack_ai.strategy import recommend_action
 from blackjack_ai.tablegen import (
+    comparison_label,
     generate_hard_totals,
     generate_pairs,
     generate_soft_totals,
     write_csv,
-    write_html,
-    write_png,
+    write_diff_png,
     write_evs_csv,
     write_flips_csv,
+    write_html,
+    write_png,
 )
 
 
