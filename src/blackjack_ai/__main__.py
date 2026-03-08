@@ -143,15 +143,13 @@ def main() -> int:
     t.add_argument("--no-das", action="store_true")
     t.add_argument("--hit-split-aces", action="store_true")
     t.add_argument("--resplit-aces", action="store_true")
-    t.add_argument("--explain", action="store_true", help="Write EV breakdown CSVs for every cell.")
+    t.add_argument("--explain", action="store_true")
     t.add_argument(
         "--compare",
         choices=["h17", "surrender", "h17+surrender"],
         default=None,
-        help="Write flip reports comparing base rules vs a variant toggle.",
     )
     t.set_defaults(fn=cmd_table)
-    t.add_argument("--png", action="store_true", help="Write PNG images (requires matplotlib)")
 
     args = p.parse_args()
     try:
