@@ -151,6 +151,7 @@ def main() -> int:
         help="Write flip reports comparing base rules vs a variant toggle.",
     )
     t.set_defaults(fn=cmd_table)
+    t.add_argument("--png", action="store_true", help="Write PNG images (requires matplotlib)")
 
     args = p.parse_args()
     try:

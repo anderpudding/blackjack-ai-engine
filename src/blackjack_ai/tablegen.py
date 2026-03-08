@@ -226,25 +226,87 @@ def write_html(tables: List[Table], path: Path) -> None:
 
 
 def write_png(table: Table, path: Path) -> None:
-    # Optional dependency at runtime; only used if you call this function.
     import matplotlib.pyplot as plt
 
     path.parent.mkdir(parents=True, exist_ok=True)
 
-    fig, ax = plt.subplots()
+    # Action colors
+    color_map = {
+        "H": "#f4cccc",  # light red
+        "S": "#d9ead3",  # light green
+        "D": "#cfe2f3",  # light blue
+        "P": "#fff2cc",  # light yellow
+        "R": "#ead1dc",  # light purple
+    }
+
+    n_rows = len(table.row_labels)
+    n_cols = len(table.col_labels)
+
+    fig_width = max(8, n_cols + 2)
+    fig_height = max(4, n_rows * 0.45 + 1.5)
+
+    fig, ax = plt.subplots(figsize=(fig_width, fig_height))
     ax.axis("off")
 
-    # Build cell text with header row/col
+    # Full table text with header row/column
     cell_text = [[""] + table.col_labels]
-    for label, row in zip(table.row_labels, table.cells):
-        cell_text.append([label] + row)
+    cell_colors = [["#f3f3f3"] * (n_cols + 1)]
 
-    ax.table(cellText=cell_text, loc="center")
-    ax.set_title(table.title)
+    for row_label, row in zip(table.row_labels, table.cells):
+        text_row = [row_label]
+        color_row = ["#f3f3f3"]
 
-    fig.tight_layout()
-    fig.savefig(path)
+        for cell in row:
+            text_row.append(cell)
+            color_row.append(color_map.get(cell, "#ffffff"))
+
+        cell_text.append(text_row)
+        cell_colors.append(color_row)
+
+    tbl = ax.table(
+        cellText=cell_text,
+        cellColours=cell_colors,
+        loc="center",
+        cellLoc="center",
+    )
+
+    tbl.auto_set_font_size(False)
+    tbl.set_fontsize(11)
+    tbl.scale(1.1, 1.4)
+
+    # Bold headers + improve borders
+    for (r, c), cell in tbl.get_celld().items():
+        cell.set_edgecolor("#444444")
+        cell.set_linewidth(0.8)
+        if r == 0 or c == 0:
+            cell.set_text_props(weight="bold")
+
+    ax.set_title(table.title, fontsize=16, weight="bold", pad=16)
+
+    # Legend
+    legend_items = [
+        ("H", "Hit", color_map["H"]),
+        ("S", "Stand", color_map["S"]),
+        ("D", "Double", color_map["D"]),
+        ("P", "Split", color_map["P"]),
+        ("R", "Surrender", color_map["R"]),
+    ]
+
+    color_map = {
+        "H": "#e06666",
+        "S": "#93c47d",
+        "D": "#6fa8dc",
+        "P": "#ffd966",
+        "R": "#c27ba0",
+    }
+
+    legend_text = "   ".join(f"{code}={label}" for code, label, _ in legend_items)
+    fig.text(0.5, 0.02, legend_text, ha="center", fontsize=10)
+
+    fig.tight_layout(rect=[0, 0.05, 1, 0.95])
+    fig.savefig(path, dpi=200, bbox_inches="tight")
     plt.close(fig)
+
 
 def write_evs_csv(
     table: Table,
