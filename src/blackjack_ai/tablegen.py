@@ -378,3 +378,109 @@ def write_flips_csv(
                 for c in cols:
                     row.append(f"{v.get(c, float('nan')):.6f}" if c in v else "")
                 w.writerow(row)
+
+
+def write_diff_png(
+    table_title: str,
+    row_labels: List[str],
+    col_labels: List[str],
+    base_evs: List[List[Dict[str, float]]],
+    var_evs: List[List[Dict[str, float]]],
+    path: Path,
+) -> None:
+    import matplotlib.pyplot as plt
+
+    path.parent.mkdir(parents=True, exist_ok=True)
+
+    # Changed cells are colored by the VARIANT action.
+    # Unchanged cells are gray.
+    color_map = {
+        "H": "#f4cccc",  # light red
+        "S": "#d9ead3",  # light green
+        "D": "#cfe2f3",  # light blue
+        "P": "#fff2cc",  # light yellow
+        "R": "#ead1dc",  # light purple
+    }
+    unchanged_color = "#eeeeee"
+    header_color = "#f3f3f3"
+
+    n_rows = len(row_labels)
+    n_cols = len(col_labels)
+
+    fig_width = max(8, n_cols + 2)
+    fig_height = max(4, n_rows * 0.45 + 1.5)
+
+    fig, ax = plt.subplots(figsize=(fig_width, fig_height))
+    ax.axis("off")
+
+    cell_text = [[""] + col_labels]
+    cell_colors = [[header_color] * (n_cols + 1)]
+
+    for r_idx, row_label in enumerate(row_labels):
+        text_row = [row_label]
+        color_row = [header_color]
+
+        for c_idx, dealer_label in enumerate(col_labels):
+            b = base_evs[r_idx][c_idx]
+            v = var_evs[r_idx][c_idx]
+
+            b_best = best_action(b)
+            v_best = best_action(v)
+
+            b_code = action_code(b_best)
+            v_code = action_code(v_best)
+
+            if b_best == v_best:
+                text_row.append("·")
+                color_row.append(unchanged_color)
+            else:
+                text_row.append(v_code)
+                color_row.append(color_map.get(v_code, "#ffffff"))
+
+        cell_text.append(text_row)
+        cell_colors.append(color_row)
+
+    tbl = ax.table(
+        cellText=cell_text,
+        cellColours=cell_colors,
+        loc="center",
+        cellLoc="center",
+    )
+
+    tbl.auto_set_font_size(False)
+    tbl.set_fontsize(11)
+    tbl.scale(1.1, 1.4)
+
+    for (r, c), cell in tbl.get_celld().items():
+        cell.set_edgecolor("#444444")
+        cell.set_linewidth(0.8)
+        if r == 0 or c == 0:
+            cell.set_text_props(weight="bold")
+        else:
+            if cell.get_text().get_text() != "·":
+                cell.set_text_props(weight="bold")
+
+    ax.set_title(table_title, fontsize=16, weight="bold", pad=16)
+
+    legend_text = (
+        "· = unchanged    "
+        "H = Hit    "
+        "S = Stand    "
+        "D = Double    "
+        "P = Split    "
+        "R = Surrender"
+    )
+    fig.text(0.5, 0.02, legend_text, ha="center", fontsize=10)
+
+    fig.tight_layout(rect=[0, 0.05, 1, 0.95])
+    fig.savefig(path, dpi=200, bbox_inches="tight")
+    plt.close(fig)
+
+
+def comparison_label(compare_mode: str) -> str:
+    mapping = {
+        "h17": "Base vs H17",
+        "surrender": "Base vs Late Surrender",
+        "h17+surrender": "Base vs H17 + Late Surrender",
+    }
+    return mapping.get(compare_mode, "Rule Comparison")
