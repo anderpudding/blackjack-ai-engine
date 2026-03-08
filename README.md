@@ -44,6 +44,78 @@ Example comparisons:
 
 ---
 
+# System Architecture
+
+```text
+User Input / CLI
+        │
+        ▼
+ ┌───────────────┐
+ │   __main__.py │
+ │ CLI Interface │
+ └───────┬───────┘
+         │
+         ▼
+ ┌────────────────┐
+ │   strategy.py  │
+ │ recommend_action
+ └───────┬────────┘
+         │
+         ▼
+ ┌────────────────┐
+ │  ev_engine.py  │
+ │ EV computation │
+ └───────┬────────┘
+         │
+   ┌─────┴─────┐
+   ▼           ▼
+┌──────────┐ ┌──────────┐
+│ dealer.py│ │ rules.py │
+│ Dealer EV│ │ Rule set │
+└────┬─────┘ └──────────┘
+     │
+     ▼
+┌──────────┐
+│ cards.py │
+│ Card /   │
+│ draw model
+└──────────┘
+
+Strategy Table Generation
+         │
+         ▼
+ ┌────────────────┐
+ │  tablegen.py   │
+ │ CSV / HTML /   │
+ │ PNG generation │
+ └────────────────┘
+ ```
+
+ ### Module Responsibilities
+
+- `__main__.py`  
+  Handles CLI commands such as single-hand queries and strategy table generation.
+
+- `strategy.py`  
+  Converts user input into engine states and selects the highest-EV action.
+
+- `ev_engine.py`  
+  Core recursive expected value engine with memoization.
+
+- `dealer.py`  
+  Computes dealer outcome probability distributions.
+
+- `rules.py`  
+  Stores configurable casino rule settings such as S17/H17, surrender, and split rules.
+
+- `cards.py`  
+  Defines card representation and draw probabilities.
+
+- `tablegen.py`  
+  Generates full hard total, soft total, and pair strategy tables in CSV, HTML, and PNG formats.
+
+---
+
 # Project Structure
 ```
 blackjack_ai
